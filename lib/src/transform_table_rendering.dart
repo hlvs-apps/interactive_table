@@ -124,7 +124,6 @@ class RenderTransformTable extends RenderBox {
 
   /// Called every time after performLayout(), with the calculated size of the table, without transforms and clips applied.
   /// Commonly used for Widgets manipulating this tables transform, e.g. for scrolling.
-  @protected
   RenderTransformTableLayoutComplete onLayoutComplete;
 
   /// Hide all rows except the headline, used to stack two tables on top of each other, so that the material widget can be put in between, so that ink splashes from the rows are not drawn over the headline.
