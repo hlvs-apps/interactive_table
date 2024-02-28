@@ -152,8 +152,8 @@ class InteractiveDataTable extends StatefulWidget {
   /// The table configuration.
   final TransformedDataTableBuilder transformedDataTableBuilder;
 
-  //Allows the user to zoom out the table so that it is displayed smaller than the viewports width and height.
-  //It gets centered if its smaller than the width and displayed at the top if its smaller than the height.
+  /// Allows the user to zoom out the table so that it is displayed smaller than the viewports width and height.
+  /// It gets centered if its smaller than the width and displayed at the top if its smaller than the height.
   final bool allowNonCoveringScreenZoom;
 
   // Used as the coefficient of friction in the inertial translation animation.

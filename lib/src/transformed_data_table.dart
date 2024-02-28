@@ -276,6 +276,7 @@ class TransformedDataTableBuilder
   /// The style to use when painting the boundary and interior divisions of the table.
   final TableBorder? border;
 
+  /// Apply the configuration to a [TransformedDataTable].
   @override
   TransformedDataTable buildTable(
       {Key? key,

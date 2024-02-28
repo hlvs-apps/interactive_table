@@ -1,3 +1,4 @@
+/// A library for creating interactive data tables.
 library interactive_table;
 
 export 'src/interactive_data_table.dart' show InteractiveDataTable;
