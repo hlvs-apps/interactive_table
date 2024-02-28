@@ -12,7 +12,7 @@ Like [DataTable2](https://pub.dev/packages/data_table_2), InteractiveDataTable i
 
 
 ## Usage
-**NOTE:** *Like in DataTable2, don't put the InteractiveDataTable inside unbounded parents. You don't need scrollables anymore (e.g. SingleChildScrollView) - widgets handle scrolling by themselves. If you need an InteractiveDataTable inside a Column(), wrap it into Expanded() or Flexible().*
+**NOTE:** *Like in DataTable2, don't put the InteractiveDataTable inside unbounded parents. You don't need scrollables anymore (e.g. SingleChildScrollView) - InteractiveDataTable handles scrolling on its own. If you need an InteractiveDataTable inside a Column(), wrap it into Expanded() or Flexible().*
 
 1. Install the package according to the [installation](https://pub.dev/packages/interactive_table/install) page.
 2. Import the package:

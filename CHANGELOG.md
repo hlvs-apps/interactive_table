@@ -7,3 +7,6 @@
 
 ## 0.0.3
 * Better documentation with examples
+
+## 0.0.4
+* Better documentation
