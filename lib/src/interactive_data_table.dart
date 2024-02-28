@@ -25,8 +25,6 @@ import 'transformed_data_table.dart';
 /// To scroll with the mouse, use the mouse wheel. To scroll horizontally, hold the shift key.
 @immutable
 class InteractiveDataTable extends StatefulWidget {
-
-
   /// Construct a [InteractiveDataTable].
   ///
   /// The [transformedDataTableBuilder] parameter configures the table,

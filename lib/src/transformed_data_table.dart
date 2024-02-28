@@ -1,6 +1,5 @@
 library interactive_table;
 
-
 //Copied and modified from flutter/lib/src/material/data_table.dart
 
 // Copyright 2014 The Flutter Authors. All rights reserved.
