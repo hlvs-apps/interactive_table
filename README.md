@@ -8,7 +8,7 @@ Like [DataTable2](https://pub.dev/packages/data_table_2), InteractiveDataTable i
 - Scrollable
 - **Automatic column width based on content, based on algorithm from Flutter's DataTable**
 
-![Preview](example/example.gif)
+![Preview](https://raw.githubusercontent.com/hlvs-apps/interactive_table/main/example/example.gif)
 
 
 ## Usage

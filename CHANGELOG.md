@@ -10,3 +10,6 @@
 
 ## 0.0.4
 * Better documentation
+
+## 0.0.5
+* pub.dev should now show the correct preview image
