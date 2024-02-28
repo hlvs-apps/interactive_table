@@ -4,3 +4,6 @@
 
 ## 0.0.2
 * Better documentation
+
+## 0.0.3
+* Better documentation with examples
