@@ -1,5 +1,5 @@
 name: interactive_table
-description: "Create an DataTable like Table with built in support for sticky headers, zoom and scroll"
+description: "A DataTable like Table with built in support for sticky headers, zoom and scroll"
 version: 0.0.1
 #homepage:
 
