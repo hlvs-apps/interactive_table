@@ -1,7 +1,15 @@
 name: interactive_table
 description: "A DataTable like Table with built in support for sticky headers, zoom and scroll"
-version: 0.0.1
+version: 0.0.2
 homepage: https://github.com/hlvs-apps/interactive_table
+
+platforms:
+  android:
+  ios:
+  linux:
+  macos:
+  web:
+  windows:
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
