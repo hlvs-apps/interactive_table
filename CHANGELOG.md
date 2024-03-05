@@ -22,3 +22,6 @@
 
 ## 0.0.8
  * Bugfixes
+
+## 0.0.9
+ * Bugfix: if the table was pan axis-aligned, the scrollbars would not show when panning

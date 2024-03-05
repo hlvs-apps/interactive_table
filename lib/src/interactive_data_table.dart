@@ -715,21 +715,28 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
         _currentRotation = desiredRotation;
 
       case _GestureType.pan:
+        assert(_referenceFocalPoint != null);
+        _currentAxis ??= _getPanAxis(_referenceFocalPoint!, focalPointScene);
+
         if (widget.panAxis == PanAxis.horizontal) {
           scrollbarController?.onScrollStartHorizontal();
         } else if (widget.panAxis == PanAxis.vertical) {
           scrollbarController?.onScrollStartVertical();
         } else if (widget.panAxis == PanAxis.free) {
           scrollbarController?.onScrollStart();
+        } else if (widget.panAxis == PanAxis.aligned) {
+          if (_currentAxis == Axis.horizontal) {
+            scrollbarController?.onScrollStartHorizontal();
+          } else {
+            scrollbarController?.onScrollStartVertical();
+          }
         }
-        assert(_referenceFocalPoint != null);
         // details may have a change in scale here when scaleEnabled is false.
         // In an effort to keep the behavior similar whether or not scaleEnabled
         // is true, these gestures are thrown away.
         if (details.scale != 1.0) {
           return;
         }
-        _currentAxis ??= _getPanAxis(_referenceFocalPoint!, focalPointScene);
         // Translate so that the same point in the scene is underneath the
         // focal point before and after the movement.
         final Offset translationChange =
