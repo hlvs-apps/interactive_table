@@ -1278,4 +1278,11 @@ class RawTransformScrollbarController
 
   /// Can be overridden to update the scrollbar when the parents widget dependencies change.
   void onDidChangeDependencies() {}
+
+  @override
+  void dispose() {
+    fadeoutAnimationControllerVertical.dispose();
+    fadeoutAnimationControllerHorizontal.dispose();
+    super.dispose();
+  }
 }

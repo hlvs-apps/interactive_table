@@ -28,3 +28,6 @@
 
 ## 0.0.10
  * Bugfix
+
+## 0.0.11
+ * Bugfix: now disposing the scroll controllers properly
