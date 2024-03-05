@@ -8,9 +8,14 @@ library interactive_table;
 import 'dart:collection';
 import 'dart:math' as math;
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+
+import 'extensions.dart';
 
 import 'package:flutter/rendering.dart';
+import 'scrollbars/transform_scrollbar_controller.dart';
 
 typedef RenderTransformTableLayoutComplete = void Function(Size size)?;
 
@@ -37,6 +42,7 @@ class RenderTransformTable extends RenderBox {
     TableColumnWidth defaultColumnWidth = const FlexColumnWidth(),
     required TextDirection textDirection,
     this.onLayoutComplete,
+    TransformScrollbarController? scrollbarController,
     TableBorder? border,
     List<Decoration?>? rowDecorations,
     ImageConfiguration configuration = ImageConfiguration.empty,
@@ -65,12 +71,33 @@ class RenderTransformTable extends RenderBox {
     _children = <RenderBox?>[]..length = _columns * _rows;
     this.rowDecorations =
         rowDecorations; // must use setter to initialize box painters array
+    this.scrollbarController =
+        scrollbarController; // must use setter to initialize the listener
     children?.forEach(addRow);
   }
 
   // Children are stored in row-major order.
   // _children.length must be rows * columns
   List<RenderBox?> _children = const <RenderBox?>[];
+
+  /// Add a scrollbar controller to this table.
+  /// This is used to control the scrollbars of the table.
+  TransformScrollbarController? get scrollbarController => _scrollbarController;
+
+  TransformScrollbarController? _scrollbarController;
+
+  set scrollbarController(TransformScrollbarController? value) {
+    if (_scrollbarController == value) {
+      return;
+    }
+    _scrollbarController?.removeListener(_onScrollbarControllerScrollChanged);
+    _scrollbarController = value;
+    _scrollbarController?.addListener(_onScrollbarControllerScrollChanged);
+  }
+
+  void _onScrollbarControllerScrollChanged() {
+    markNeedsPaint(onlyPaintingTransform: true);
+  }
 
   /// The number of vertical alignment lines in this table.
   ///
@@ -780,38 +807,6 @@ class RenderTransformTable extends RenderBox {
   Iterable<double>? _columnLefts;
   late double _tableWidth;
 
-  /// Returns the position and dimensions of the box that the given
-  /// row covers, in this render object's coordinate space (so the
-  /// left coordinate is always 0.0).
-  ///
-  /// The row being queried must exist.
-  ///
-  /// This is only valid after layout.
-  /*Rect getRowBox(int row) {
-    assert(row >= 0);
-    assert(row < rows);
-    assert(!debugNeedsLayout);
-    Rect normalRect =
-        Rect.fromLTRB(0.0, 0, _tableWidth, _rowTops[row]-_rowTops[row + 1]);
-    final Offset offset = (_children[columns*(row+1)]!.parentData as TableCellParentData).offset;
-    //print(offset);
-    Matrix4 transform= Matrix4.identity();
-    if (row==0) {
-      transform.multiply(_transformHeader);
-    } else {
-      transform.multiply(_transform);
-    }
-    transform.translate(offset.dx, offset.dy);
-    //print(normalRect.toString() +" "+  MatrixUtils.transformRect(_transform, normalRect).toString());
-    return MatrixUtils.transformRect(transform, normalRect);
-    if (row == 0) {
-      return MatrixUtils.transformRect(_transformHeader, normalRect);
-    } else {
-      return normalRect.translate(_transform.getTranslation().x, _transform.getTranslation().y);
-      //return MatrixUtils.transformRect(_transform, normalRect);
-    }
-  }*/
-
   Rect getRowBox(int row) {
     assert(row >= 0);
     assert(row < rows);
@@ -991,7 +986,7 @@ class RenderTransformTable extends RenderBox {
 
   //Dafür und für das clip rect habe ich 5 Stunden gebraucht
   Rect get _bodyArea => Rect.fromLTRB(
-      0, _rowTops[1] * transform.getMaxScaleOnAxis(), size.width, size.height);
+      0, _rowTops[1] * transform.getScaleOnZAxis(), size.width, size.height);
 
   Rect get _clipRectComplete => Rect.fromLTRB(0, 0, size.width, size.height);
 
@@ -1005,6 +1000,15 @@ class RenderTransformTable extends RenderBox {
         position.dy > size.height) {
       return false;
     }
+
+    if (scrollbarController?.horizontalScrollbar.hitTest(position) ?? false) {
+      return true;
+    }
+
+    if (scrollbarController?.verticalScrollbar.hitTest(position) ?? false) {
+      return true;
+    }
+
     //Then check for heading line
     if (!hideHeadline) {
       for (int index = columns - 1; index >= 0; index -= 1) {
@@ -1083,6 +1087,7 @@ class RenderTransformTable extends RenderBox {
     _containerHeaderDecorationLayer.layer = null;
     _containerHeaderLayer.layer = null;
     _containerBorderLayer.layer = null;
+    _scrollbarController?.removeListener(_onScrollbarControllerScrollChanged);
     super.dispose();
   }
 
@@ -1104,6 +1109,9 @@ class RenderTransformTable extends RenderBox {
 
   @override
   void markNeedsPaint({bool onlyPaintingTransform = false}) {
+    if (_painting) {
+      return;
+    }
     if (onlyPaintingTransform) {
       _repaintOnlyTransform = true;
     } else {
@@ -1116,8 +1124,19 @@ class RenderTransformTable extends RenderBox {
   @override
   bool get alwaysNeedsCompositing => true;
 
+  bool _painting = false;
+
   @override
   void paint(PaintingContext context, Offset offset) {
+    _painting = true;
+    try {
+      doPaint(context, offset);
+    } finally {
+      _painting = false;
+    }
+  }
+
+  void doPaint(PaintingContext context, Offset offset) {
     assert(_children.length == rows * columns);
     if (rows * columns == 0) {
       if (border != null) {
@@ -1305,6 +1324,8 @@ class RenderTransformTable extends RenderBox {
         _containerBorderLayer.layer = null;
       }
     });
+    _scrollbarController?.updateAndPaint(
+        context, transform, size, Size(_tableWidth, _rowTops.last));
   }
 
   @override

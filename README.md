@@ -6,6 +6,8 @@ Like [DataTable2](https://pub.dev/packages/data_table_2), InteractiveDataTable i
 - **Zoomable content**
 - Draggable
 - Scrollable
+- Scrollbars
+- **Double tap to zoom in and out**
 - **Automatic column width based on content, based on algorithm from Flutter's DataTable**
 
 ![Preview](https://raw.githubusercontent.com/hlvs-apps/interactive_table/main/example/example.gif)
@@ -75,7 +77,6 @@ and wrapping this builder with InteractiveDataTable.
 ## Additional information
 
 I am working on adding more features to this library, such as:
-- Scrollbars
 - iOS like overscroll effect and bounce
 
 Currently, the package is in early development stage, so it may contain bugs and missing features. If you find any, please report them in [GitHub issues](https://github.com/hlvs-apps/interactive_table/issues).

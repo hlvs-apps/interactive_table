@@ -7,11 +7,14 @@ import 'package:flutter/foundation.dart' show clampDouble;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
+import 'scrollbars/auto_platform_scrollbar_controller.dart';
+import 'scrollbars/transform_scrollbar_controller.dart';
 import 'package:vector_math/vector_math_64.dart' show Matrix4, Quad, Vector3;
 
 import 'package:flutter/material.dart';
 
 import 'transformed_data_table.dart';
+import 'extensions.dart';
 
 ///
 /// A [InteractiveDataTable] is a widget that allows the user to pan and scale a MaterialDesign like [DataTable].
@@ -41,6 +44,7 @@ class InteractiveDataTable extends StatefulWidget {
     this.interactionEndFrictionCoefficient = _kDrag,
     this.panEnabled = true,
     this.scaleEnabled = true,
+    this.showScrollbars = true,
     this.scaleFactor = kDefaultMouseScrollToScaleFactor,
     this.transformationController,
     this.doubleTapToZoom = true,
@@ -155,6 +159,9 @@ class InteractiveDataTable extends StatefulWidget {
   /// Allows the user to zoom out the table so that it is displayed smaller than the viewports width and height.
   /// It gets centered if its smaller than the width and displayed at the top if its smaller than the height.
   final bool allowNonCoveringScreenZoom;
+
+  /// Whether to show scrollbars.
+  final bool showScrollbars;
 
   // Used as the coefficient of friction in the inertial translation animation.
   // This value was eyeballed to give a feel similar to Google Photos.
@@ -306,6 +313,8 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
   double _currentRotation = 0.0; // Rotation of _transformationController.value.
   _GestureType? _gestureType;
 
+  RawTransformScrollbarController? scrollbarController;
+
   Size? _realChildSize;
 
   void _calculatedTableSize(Size size) {
@@ -317,7 +326,7 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
               _transformationController!.value,
               _viewport.width /
                   (size.width *
-                      _transformationController!.value.getMaxScaleOnAxis()));
+                      _transformationController!.value.getScaleOnZAxis()));
         });
       } else {
         Future.delayed(Duration.zero, _updateTransform);
@@ -329,7 +338,7 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
             widget.zoomToWidth
                 ? _boundaryRect.width /
                     (size.width *
-                        _transformationController!.value.getMaxScaleOnAxis())
+                        _transformationController!.value.getScaleOnZAxis())
                 : 0.000001);
       });
     }
@@ -353,9 +362,9 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
     Matrix4 transform = _transformationController!.value;
     Rect boundaryRect = _boundaryRect;
     Rect viewport = _viewport;
-    if (boundaryRect.width * transform.getMaxScaleOnAxis() < viewport.width) {
+    if (boundaryRect.width * transform.getScaleOnZAxis() < viewport.width) {
       transform = transform.clone(); //dont change the transformation controller
-      double scale = transform.getMaxScaleOnAxis();
+      double scale = transform.getScaleOnZAxis();
       transform.scale(1 / scale);
       double translation = (viewport.width - (boundaryRect.width * scale)) / 2;
       transform.translate(translation);
@@ -461,7 +470,7 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
     // Desired translation goes out of bounds, so translate to the nearest
     // in-bounds point instead.
     final Offset nextTotalTranslation = _getMatrixTranslation(nextMatrix);
-    final double currentScale = matrix.getMaxScaleOnAxis();
+    final double currentScale = matrix.getScaleOnZAxis();
     final Offset correctedTotalTranslation = Offset(
       nextTotalTranslation.dx - offendingDistance.dx * currentScale,
       nextTotalTranslation.dy - offendingDistance.dy * currentScale,
@@ -520,7 +529,7 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
     // Don't allow a scale that results in an overall scale beyond min/max
     // scale.
     final double currentScale =
-        _transformationController!.value.getMaxScaleOnAxis();
+        _transformationController!.value.getScaleOnZAxis();
     final double totalScale = math.max(
       currentScale * scale,
       // Ensure that the scale cannot make the child so **small** that it can't fit //Korrigiert von der originalversion
@@ -619,7 +628,7 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
 
     _gestureType = null;
     _currentAxis = null;
-    _scaleStart = _transformationController!.value.getMaxScaleOnAxis();
+    _scaleStart = _transformationController!.value.getScaleOnZAxis();
     _referenceFocalPoint = _transformationController!.toScene(
       details.localFocalPoint,
     );
@@ -629,7 +638,7 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
   // Handle an update to an ongoing gesture. All of pan, scale, and rotate are
   // handled with GestureDetector's scale gesture.
   void _onScaleUpdate(ScaleUpdateDetails details) {
-    final double scale = _transformationController!.value.getMaxScaleOnAxis();
+    final double scale = _transformationController!.value.getScaleOnZAxis();
     _scaleAnimationFocalPoint = details.localFocalPoint;
     final Offset focalPointScene = _transformationController!.toScene(
       details.localFocalPoint,
@@ -651,6 +660,7 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
     switch (_gestureType!) {
       case _GestureType.scale:
         assert(_scaleStart != null);
+        scrollbarController?.onScrollStart();
         // details.scale gives us the amount to change the scale as of the
         // start of this gesture, so calculate the amount to scale as of the
         // previous call to _onScaleUpdate.
@@ -695,6 +705,7 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
         if (details.rotation == 0.0) {
           return;
         }
+        scrollbarController?.onScrollStart();
         final double desiredRotation = _rotationStart! + details.rotation;
         _transformationController!.value = _matrixRotate(
           _transformationController!.value,
@@ -704,6 +715,13 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
         _currentRotation = desiredRotation;
 
       case _GestureType.pan:
+        if (widget.panAxis == PanAxis.horizontal) {
+          scrollbarController?.onScrollStartHorizontal();
+        } else if (widget.panAxis == PanAxis.vertical) {
+          scrollbarController?.onScrollStartVertical();
+        } else if (widget.panAxis == PanAxis.free) {
+          scrollbarController?.onScrollStart();
+        }
         assert(_referenceFocalPoint != null);
         // details may have a change in scale here when scaleEnabled is false.
         // In an effort to keep the behavior similar whether or not scaleEnabled
@@ -740,12 +758,14 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
 
     if (!_gestureIsSupported(_gestureType)) {
       _currentAxis = null;
+      scrollbarController?.onScrollEnd();
       return;
     }
 
     if (_gestureType == _GestureType.pan) {
       if (details.velocity.pixelsPerSecond.distance < kMinFlingVelocity) {
         _currentAxis = null;
+        scrollbarController?.onScrollEnd();
         return;
       }
       final Vector3 translationVector =
@@ -779,9 +799,10 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
     } else if (_gestureType == _GestureType.scale) {
       if (details.scaleVelocity.abs() < 0.1) {
         _currentAxis = null;
+        scrollbarController?.onScrollEnd();
         return;
       }
-      final double scale = _transformationController!.value.getMaxScaleOnAxis();
+      final double scale = _transformationController!.value.getScaleOnZAxis();
       final FrictionSimulation frictionSimulation = FrictionSimulation(
           widget.interactionEndFrictionCoefficient * widget.scaleFactor,
           scale,
@@ -797,6 +818,8 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
           Duration(milliseconds: (tFinal * 1000).round());
       _scaleAnimation!.addListener(_onScaleAnimate);
       _scaleController.forward();
+    } else {
+      scrollbarController?.onScrollEnd();
     }
   }
 
@@ -834,11 +857,17 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
     if (event is PointerScrollEvent) {
       if (!_ctrlPressed) {
         // Normal scroll, so treat it as a pan.
+        if (!_gestureIsSupported(_GestureType.pan)) {
+          return;
+        }
 
         Offset scrollDelta = event.scrollDelta;
         //Shift pressed, so scroll horizontally with the mousewheel
         if (event.kind != PointerDeviceKind.trackpad && _shiftPressed) {
           scrollDelta = Offset(scrollDelta.dy, scrollDelta.dx);
+          scrollbarController?.onScrollStartHorizontal();
+        } else {
+          scrollbarController?.onScrollStartVertical();
         }
 
         final Offset localDelta = PointerEvent.transformDeltaViaPositions(
@@ -846,10 +875,6 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
           untransformedDelta: scrollDelta,
           transform: event.transform,
         );
-
-        if (!_gestureIsSupported(_GestureType.pan)) {
-          return;
-        }
 
         final Offset focalPointScene = _transformationController!.toScene(
           event.localPosition,
@@ -862,7 +887,7 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
         _transformationController!.value = _matrixTranslate(
             _transformationController!.value,
             newFocalPointScene - focalPointScene);
-
+        scrollbarController?.onScrollEnd();
         return;
       }
       // Ignore left and right mouse wheel scroll.
@@ -879,6 +904,7 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
     if (!_gestureIsSupported(_GestureType.scale)) {
       return;
     }
+    scrollbarController?.onScrollStart();
 
     final Offset focalPointScene = _transformationController!.toScene(
       event.localPosition,
@@ -902,6 +928,7 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
     if (_nonCoveringZoom) {
       _afterNonCoveringZoom();
     }
+    scrollbarController?.onScrollEnd();
   }
 
   // Used for getting position of double tap for zoom in and out
@@ -912,7 +939,7 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
       return;
     }
     final double currentScale =
-        _transformationController!.value.getMaxScaleOnAxis();
+        _transformationController!.value.getScaleOnZAxis();
     final double pos1Scale = _viewport.width / _boundaryRect.width;
     const double pos2Scale = 1;
     final position = _doubleTapDetails!.localPosition;
@@ -972,8 +999,8 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
     }
 
     if (!noZoom) {
-      double scale = newMatrix.getMaxScaleOnAxis();
-      double oldScale = _transformationController!.value.getMaxScaleOnAxis();
+      double scale = newMatrix.getScaleOnZAxis();
+      double oldScale = _transformationController!.value.getScaleOnZAxis();
 
       _scaleAnimation = Tween<double>(begin: oldScale, end: scale)
           .animate(CurvedAnimation(parent: _scaleController, curve: curve));
@@ -983,6 +1010,8 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
     _setToAfterAnimate = _getScaled(
         position: focalPoint,
         matrixZoomedNeedToApplyFocalPointTracking: newMatrix);
+
+    scrollbarController?.onScrollStart();
     if (!noTranslation) {
       _animation!.addListener(_onAnimate);
       _controller.forward();
@@ -1000,6 +1029,7 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
       _transformationController!.value = _setToAfterAnimate!;
       _setToAfterAnimate = null;
     }
+    scrollbarController?.onScrollEnd();
   }
 
   Matrix4 _getScaled(
@@ -1079,7 +1109,7 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
     }
     final double desiredScale = _scaleAnimation!.value;
     final double scaleChange =
-        desiredScale / _transformationController!.value.getMaxScaleOnAxis();
+        desiredScale / _transformationController!.value.getScaleOnZAxis();
     final Offset referenceFocalPoint = _transformationController!.toScene(
       _scaleAnimationFocalPoint,
     );
@@ -1118,7 +1148,53 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
     _controller = AnimationController(vsync: this);
     _scaleController = AnimationController(vsync: this);
 
+    setScrollbarControllers();
+
     ServicesBinding.instance.keyboard.addHandler(_onKey);
+  }
+
+  void setScrollbarControllers() {
+    if (!widget.showScrollbars) {
+      scrollbarController = null;
+      return;
+    }
+    Future.microtask(() {
+      scrollbarController = getPlatformScrollbarController(
+        vsync: this,
+        controlInterface: CustomTransformScrollbarWidgetInterface(
+          fgetTransform: () => _transformationController!.value,
+          fgetViewport: () => _viewport.size,
+          fgetContent: () => _boundaryRect.size,
+          fcontext: () => context,
+          fjumpVertical: (v) {
+            _transformationController!.value = _matrixTranslate(
+                _transformationController!.value,
+                Offset(
+                    0, v / _transformationController!.value.getScaleOnZAxis()));
+          },
+          fjumpHorizontal: (h) {
+            _transformationController!.value = _matrixTranslate(
+                _transformationController!.value,
+                Offset(
+                    h / _transformationController!.value.getScaleOnZAxis(), 0));
+          },
+          fanimateVertical: (v, d, c) {
+            Matrix4 newTransform = _matrixTranslate(
+                _transformationController!.value,
+                Offset(0,
+                    -v / _transformationController!.value.getScaleOnZAxis()));
+            _animateTo(newTransform, duration: d, curve: c, noZoom: true);
+          },
+          fanimateHorizontal: (h, d, c) {
+            Matrix4 newTransform = _matrixTranslate(
+                _transformationController!.value,
+                Offset(-h / _transformationController!.value.getScaleOnZAxis(),
+                    0));
+            _animateTo(newTransform, duration: d, curve: c, noZoom: true);
+          },
+        ),
+      );
+    });
   }
 
   @override
@@ -1151,6 +1227,16 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
             .addListener(_onTransformationControllerChange);
       }
     }
+
+    if (oldWidget.showScrollbars != widget.showScrollbars) {
+      setScrollbarControllers();
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    scrollbarController?.onDidChangeDependencies();
   }
 
   @override
@@ -1169,11 +1255,56 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
   @override
   Widget build(BuildContext context) {
     Widget child;
+    ExtendedTransformScrollbarController? scrollbarController =
+        this.scrollbarController;
+    scrollbarController?.updateScrollbarPainters();
     child = widget.transformedDataTableBuilder.buildTable(
       key: _childKey,
       transform: _transformForRender,
       onLayoutComplete: _calculatedTableSize,
+      scrollbarController: scrollbarController,
     );
+
+    if (scrollbarController != null) {
+      child = RawGestureDetector(
+        gestures: scrollbarController.getGesturesVertical(context),
+        child: MouseRegion(
+          onExit: (PointerExitEvent event) {
+            switch (event.kind) {
+              case PointerDeviceKind.mouse:
+              case PointerDeviceKind.trackpad:
+                if (scrollbarController.enableGestures) {
+                  scrollbarController.handleHoverExit(event);
+                }
+              case PointerDeviceKind.stylus:
+              case PointerDeviceKind.invertedStylus:
+              case PointerDeviceKind.unknown:
+              case PointerDeviceKind.touch:
+                break;
+            }
+          },
+          onHover: (PointerHoverEvent event) {
+            switch (event.kind) {
+              case PointerDeviceKind.mouse:
+              case PointerDeviceKind.trackpad:
+                if (scrollbarController.enableGestures) {
+                  scrollbarController.handleHover(event);
+                }
+              case PointerDeviceKind.stylus:
+              case PointerDeviceKind.invertedStylus:
+              case PointerDeviceKind.unknown:
+              case PointerDeviceKind.touch:
+                break;
+            }
+          },
+          child: child,
+        ),
+      );
+      child = RawGestureDetector(
+        gestures: scrollbarController.getGesturesHorizontal(context),
+        child: child,
+      );
+    }
 
     return Listener(
       key: _parentKey,

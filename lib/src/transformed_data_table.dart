@@ -10,6 +10,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
+import 'extensions.dart';
+import 'scrollbars/transform_scrollbar_controller.dart';
 import 'transform_table.dart';
 import 'transform_table_rendering.dart';
 import 'transform_table_stateful.dart';
@@ -281,7 +283,8 @@ class TransformedDataTableBuilder
   TransformedDataTable buildTable(
       {Key? key,
       required Matrix4 transform,
-      RenderTransformTableLayoutComplete? onLayoutComplete}) {
+      RenderTransformTableLayoutComplete? onLayoutComplete,
+      TransformScrollbarController? scrollbarController}) {
     return TransformedDataTable(
       key: key,
       initialTransform: transform,
@@ -306,6 +309,7 @@ class TransformedDataTableBuilder
       checkboxHorizontalMargin: checkboxHorizontalMargin,
       border: border,
       columns: columns,
+      scrollbarController: scrollbarController,
     );
   }
 }
@@ -418,6 +422,7 @@ class TransformedDataTable extends TransformStatefulWidget {
     required this.rows,
     this.checkboxHorizontalMargin,
     this.border,
+    this.scrollbarController,
   })  : assert(columns.isNotEmpty),
         assert(sortColumnIndex == null ||
             (sortColumnIndex >= 0 && sortColumnIndex < columns.length)),
@@ -678,6 +683,9 @@ class TransformedDataTable extends TransformStatefulWidget {
   // Set by the constructor to the index of the only Column that is
   // non-numeric, if there is exactly one, otherwise null.
   final int? _onlyTextColumn;
+
+  /// Configures how to paint the scrollbars.If null, no scrollbars will be painted.
+  final TransformScrollbarController? scrollbarController;
 
   static int? _initOnlyTextColumn(List<DataColumn> columns) {
     int? result;
@@ -1222,6 +1230,7 @@ class TransformedDataTableState
               hideRows: true,
               border: widget.border,
               initialTransform: transform,
+              scrollbarController: widget.scrollbarController,
               rowOverlay: Material(
                 type: MaterialType.transparency,
                 child: RepaintBoundary(
@@ -1309,7 +1318,7 @@ class TableRowInkWell extends InkResponse {
         Offset offset = Offset(
             (transform.getTranslation().x -
                     onlyTableTransform.getTranslation().x) *
-                (1 / transform.getMaxScaleOnAxis()),
+                (1 / transform.getScaleOnZAxis()),
             0);
         return rect.shift(-offset);
       }

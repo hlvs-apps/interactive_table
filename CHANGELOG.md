@@ -13,3 +13,6 @@
 
 ## 0.0.5
 * pub.dev should now show the correct preview image
+
+## 0.0.6
+ * Added scrollbars

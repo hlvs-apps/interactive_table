@@ -11,6 +11,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 
 import 'package:flutter/widgets.dart';
+import 'scrollbars/transform_scrollbar_controller.dart';
 
 import 'transform_table_rendering.dart';
 
@@ -80,6 +81,7 @@ class TransformTable extends RenderObjectWidget {
     this.border,
     this.onLayoutComplete,
     this.defaultVerticalAlignment = TableCellVerticalAlignment.top,
+    this.scrollbarController,
     this.textBaseline, // NO DEFAULT: we don't know what the text's baseline should be
   })  : assert(
             defaultVerticalAlignment != TableCellVerticalAlignment.baseline ||
@@ -148,6 +150,9 @@ class TransformTable extends RenderObjectWidget {
   final bool hideHeadline;
 
   final bool hideRows;
+
+  /// Configures how to paint the scrollbars.If null, no scrollbars will be painted.
+  final TransformScrollbarController? scrollbarController;
 
   /// Called every time after performLayout(), with the calculated size of the table, without transforms and clips applied.
   /// Commonly used for Widgets manipulating this tables transform, e.g. for scrolling.
@@ -232,6 +237,7 @@ class TransformTable extends RenderObjectWidget {
       hideHeadline: hideHeadline,
       onLayoutComplete: onLayoutComplete,
       hideRows: hideRows,
+      scrollbarController: scrollbarController,
     );
   }
 
@@ -254,7 +260,8 @@ class TransformTable extends RenderObjectWidget {
       ..transform = transform
       ..hideHeadline = hideHeadline
       ..onLayoutComplete = onLayoutComplete
-      ..hideRows = hideRows;
+      ..hideRows = hideRows
+      ..scrollbarController = scrollbarController;
   }
 }
 

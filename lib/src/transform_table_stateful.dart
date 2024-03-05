@@ -1,5 +1,6 @@
 library interactive_table;
 
+import 'scrollbars/transform_scrollbar_controller.dart';
 import 'transformed_table_builder.dart';
 import 'transform_table_rendering.dart';
 import 'transform_table.dart';
@@ -25,6 +26,7 @@ class TransformTableStateful extends TransformStatefulWidget {
     this.border,
     this.onLayoutComplete,
     this.defaultVerticalAlignment = TableCellVerticalAlignment.top,
+    this.scrollbarController,
     this.textBaseline, // NO DEFAULT: we don't know what the text's baseline should be
   });
 
@@ -38,6 +40,9 @@ class TransformTableStateful extends TransformStatefulWidget {
   final bool hideHeadline;
 
   final bool hideRows;
+
+  /// Configures how to paint the scrollbars.If null, no scrollbars will be painted.
+  final TransformScrollbarController? scrollbarController;
 
   /// Called every time after performLayout(), with the calculated size of the table, without transforms and clips applied.
   /// Commonly used for Widgets manipulating this tables transform, e.g. for scrolling.
@@ -121,6 +126,7 @@ class TransformTableStatefulState
       onLayoutComplete: widget.onLayoutComplete,
       defaultVerticalAlignment: widget.defaultVerticalAlignment,
       textBaseline: widget.textBaseline,
+      scrollbarController: widget.scrollbarController,
     );
   }
 }
