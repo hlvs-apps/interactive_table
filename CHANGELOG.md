@@ -31,3 +31,6 @@
 
 ## 0.0.11
  * Bugfix: now disposing the scroll controllers properly
+
+## 0.0.12
+ * Removed unnecessary imports
