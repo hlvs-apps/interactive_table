@@ -1147,9 +1147,6 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
     _transformationController!.addListener(_onTransformationControllerChange);
     _controller = AnimationController(vsync: this);
     _scaleController = AnimationController(vsync: this);
-
-    setScrollbarControllers();
-
     ServicesBinding.instance.keyboard.addHandler(_onKey);
   }
 
@@ -1158,43 +1155,41 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
       scrollbarController = null;
       return;
     }
-    Future.microtask(() {
-      scrollbarController = getPlatformScrollbarController(
-        vsync: this,
-        controlInterface: CustomTransformScrollbarWidgetInterface(
-          fgetTransform: () => _transformationController!.value,
-          fgetViewport: () => _viewport.size,
-          fgetContent: () => _boundaryRect.size,
-          fcontext: () => context,
-          fjumpVertical: (v) {
-            _transformationController!.value = _matrixTranslate(
-                _transformationController!.value,
-                Offset(
-                    0, v / _transformationController!.value.getScaleOnZAxis()));
-          },
-          fjumpHorizontal: (h) {
-            _transformationController!.value = _matrixTranslate(
-                _transformationController!.value,
-                Offset(
-                    h / _transformationController!.value.getScaleOnZAxis(), 0));
-          },
-          fanimateVertical: (v, d, c) {
-            Matrix4 newTransform = _matrixTranslate(
-                _transformationController!.value,
-                Offset(0,
-                    -v / _transformationController!.value.getScaleOnZAxis()));
-            _animateTo(newTransform, duration: d, curve: c, noZoom: true);
-          },
-          fanimateHorizontal: (h, d, c) {
-            Matrix4 newTransform = _matrixTranslate(
-                _transformationController!.value,
-                Offset(-h / _transformationController!.value.getScaleOnZAxis(),
-                    0));
-            _animateTo(newTransform, duration: d, curve: c, noZoom: true);
-          },
-        ),
-      );
-    });
+    scrollbarController ??= getPlatformScrollbarController(
+      vsync: this,
+      controlInterface: CustomTransformScrollbarWidgetInterface(
+        fgetTransform: () => _transformationController!.value,
+        fgetViewport: () => _viewport.size,
+        fgetContent: () => _boundaryRect.size,
+        fcontext: () => context,
+        fjumpVertical: (v) {
+          _transformationController!.value = _matrixTranslate(
+              _transformationController!.value,
+              Offset(
+                  0, v / _transformationController!.value.getScaleOnZAxis()));
+        },
+        fjumpHorizontal: (h) {
+          _transformationController!.value = _matrixTranslate(
+              _transformationController!.value,
+              Offset(
+                  h / _transformationController!.value.getScaleOnZAxis(), 0));
+        },
+        fanimateVertical: (v, d, c) {
+          Matrix4 newTransform = _matrixTranslate(
+              _transformationController!.value,
+              Offset(
+                  0, -v / _transformationController!.value.getScaleOnZAxis()));
+          _animateTo(newTransform, duration: d, curve: c, noZoom: true);
+        },
+        fanimateHorizontal: (h, d, c) {
+          Matrix4 newTransform = _matrixTranslate(
+              _transformationController!.value,
+              Offset(
+                  -h / _transformationController!.value.getScaleOnZAxis(), 0));
+          _animateTo(newTransform, duration: d, curve: c, noZoom: true);
+        },
+      ),
+    );
   }
 
   @override
@@ -1236,6 +1231,7 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    setScrollbarControllers();
     scrollbarController?.onDidChangeDependencies();
   }
 

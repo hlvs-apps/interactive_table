@@ -19,3 +19,6 @@
 
 ## 0.0.7
  * Bugfixes
+
+## 0.0.8
+ * Bugfixes
