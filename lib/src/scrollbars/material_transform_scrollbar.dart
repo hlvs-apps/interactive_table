@@ -46,6 +46,7 @@ class MaterialScrollbarTransformController
     _hoverAnimationControllerH.addListener(() {
       updateScrollbarPainter(false);
     });
+    onDidChangeDependencies();
   }
 
   final bool? showTrackOnHover;

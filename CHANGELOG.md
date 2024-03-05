@@ -16,3 +16,6 @@
 
 ## 0.0.6
  * Added scrollbars
+
+## 0.0.7
+ * Bugfixes
