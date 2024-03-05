@@ -1159,6 +1159,9 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
 
   void setScrollbarControllers() {
     if (!widget.showScrollbars) {
+      if(scrollbarController != null) {
+        scrollbarController!.dispose();
+      }
       scrollbarController = null;
       return;
     }
@@ -1251,6 +1254,7 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
     if (widget.transformationController == null) {
       _transformationController!.dispose();
     }
+    scrollbarController?.dispose();
     ServicesBinding.instance.keyboard.removeHandler(_onKey);
     super.dispose();
   }
