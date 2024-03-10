@@ -34,3 +34,6 @@
 
 ## 0.0.12
  * Removed unnecessary imports
+
+## 0.0.13
+ * It can now be configured if mouse panning should result in scroll

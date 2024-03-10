@@ -45,6 +45,7 @@ class InteractiveDataTable extends StatefulWidget {
     this.panEnabled = true,
     this.scaleEnabled = true,
     this.showScrollbars = true,
+    this.noMouseDragScroll = true,
     this.scaleFactor = kDefaultMouseScrollToScaleFactor,
     this.transformationController,
     this.doubleTapToZoom = true,
@@ -162,6 +163,13 @@ class InteractiveDataTable extends StatefulWidget {
 
   /// Whether to show scrollbars.
   final bool showScrollbars;
+
+  /// When true, disables drag scrolling with the mouse.
+  /// Only mouse wheel zooming, and when enabled scrollbar zooming, is allowed then.
+  ///
+  /// Defaults to true.
+  /// Set to false to match the behavior of [InteractiveViewer].
+  final bool noMouseDragScroll;
 
   // Used as the coefficient of friction in the inertial translation animation.
   // This value was eyeballed to give a feel similar to Google Photos.
@@ -575,7 +583,7 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
   }
 
   // Returns true iff the given _GestureType is enabled.
-  bool _gestureIsSupported(_GestureType? gestureType) {
+  bool _gestureIsSupported(_GestureType? gestureType, {bool outer = false}) {
     switch (gestureType) {
       case _GestureType.rotate:
         return _rotateEnabled;
@@ -585,6 +593,9 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
 
       case _GestureType.pan:
       case null:
+        if (widget.noMouseDragScroll && outer) {
+          return false;
+        }
         return widget.panEnabled;
     }
   }
@@ -637,7 +648,7 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
 
   // Handle an update to an ongoing gesture. All of pan, scale, and rotate are
   // handled with GestureDetector's scale gesture.
-  void _onScaleUpdate(ScaleUpdateDetails details) {
+  void _onScaleUpdate(ScaleUpdateDetails details, {bool inner = false}) {
     final double scale = _transformationController!.value.getScaleOnZAxis();
     _scaleAnimationFocalPoint = details.localFocalPoint;
     final Offset focalPointScene = _transformationController!.toScene(
@@ -653,7 +664,7 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
     } else {
       _gestureType ??= _getGestureType(details);
     }
-    if (!_gestureIsSupported(_gestureType)) {
+    if (!_gestureIsSupported(_gestureType, outer: inner)) {
       return;
     }
 
@@ -753,7 +764,7 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
 
   // Handle the end of a gesture of _GestureType. All of pan, scale, and rotate
   // are handled with GestureDetector's scale gesture.
-  void _onScaleEnd(ScaleEndDetails details) {
+  void _onScaleEnd(ScaleEndDetails details, {bool outer = false}) {
     _scaleStart = null;
     _rotationStart = null;
     _referenceFocalPoint = null;
@@ -763,7 +774,7 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
     _controller.reset();
     _scaleController.reset();
 
-    if (!_gestureIsSupported(_gestureType)) {
+    if (!_gestureIsSupported(_gestureType, outer: outer)) {
       _currentAxis = null;
       scrollbarController?.onScrollEnd();
       return;
@@ -1159,7 +1170,7 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
 
   void setScrollbarControllers() {
     if (!widget.showScrollbars) {
-      if(scrollbarController != null) {
+      if (scrollbarController != null) {
         scrollbarController!.dispose();
       }
       scrollbarController = null;
@@ -1313,20 +1324,54 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
       );
     }
 
-    return Listener(
-      key: _parentKey,
-      onPointerSignal: _receivedPointerSignal,
-      child: GestureDetector(
+
+    if (!widget.noMouseDragScroll) {
+      child = GestureDetector(
         behavior: HitTestBehavior.opaque,
         // Necessary when panning off screen.
-        onScaleEnd: _onScaleEnd,
+        onScaleEnd: (_onScaleEnd),
         onScaleStart: _onScaleStart,
         onScaleUpdate: _onScaleUpdate,
         onDoubleTapDown:
             widget.doubleTapToZoom ? ((d) => _doubleTapDetails = d) : null,
         onDoubleTap: widget.doubleTapToZoom ? _handleDoubleTap : null,
         child: child,
-      ),
+      );
+    } else {
+      child = GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        supportedDevices: const {
+          PointerDeviceKind.touch,
+          PointerDeviceKind.trackpad,
+          PointerDeviceKind.stylus,
+          PointerDeviceKind.invertedStylus,
+          PointerDeviceKind.unknown,
+        },
+        onScaleEnd: _onScaleEnd,
+        onScaleStart: _onScaleStart,
+        onScaleUpdate: _onScaleUpdate,
+        child: child,
+      );
+      child = GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onScaleEnd: (d) {
+          _onScaleEnd(d, outer: true);
+        },
+        onScaleStart: _onScaleStart,
+        onScaleUpdate: (d) {
+          _onScaleUpdate(d, inner: true);
+        },
+        onDoubleTapDown:
+        widget.doubleTapToZoom ? ((d) => _doubleTapDetails = d) : null,
+        onDoubleTap: widget.doubleTapToZoom ? _handleDoubleTap : null,
+        child: child,
+      );
+    }
+
+    return Listener(
+      key: _parentKey,
+      onPointerSignal: _receivedPointerSignal,
+      child: child,
     );
   }
 }
