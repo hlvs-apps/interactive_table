@@ -37,6 +37,7 @@ class TransformedDataTableBuilder
     this.columnSpacing,
     this.showCheckboxColumn = true,
     this.showBottomBorder = false,
+    this.disableDivider = false,
     this.dividerThickness,
     required this.rows,
     this.checkboxHorizontalMargin,
@@ -257,7 +258,15 @@ class TransformedDataTableBuilder
   ///
   /// If null, [DataTableThemeData.dividerThickness] is used. This value
   /// defaults to 1.0.
+  ///
+  /// If set to 0.0, a hairline border will be shown.
+  /// To disable the divider, set [disableDivider] to true.
   final double? dividerThickness;
+
+  /// If set,disables the divider between two rows.
+  ///
+  /// See also: [dividerThickness]
+  final bool disableDivider;
 
   /// Whether a border at the bottom of the table is displayed.
   ///
@@ -304,6 +313,7 @@ class TransformedDataTableBuilder
       showCheckboxColumn: showCheckboxColumn,
       showBottomBorder: showBottomBorder,
       dividerThickness: dividerThickness,
+      disableDivider: disableDivider,
       onLayoutComplete: onLayoutComplete,
       rows: rows,
       checkboxHorizontalMargin: checkboxHorizontalMargin,
@@ -418,6 +428,7 @@ class TransformedDataTable extends TransformStatefulWidget {
     this.showCheckboxColumn = true,
     this.showBottomBorder = false,
     this.dividerThickness,
+    this.disableDivider = false,
     this.onLayoutComplete,
     required this.rows,
     this.checkboxHorizontalMargin,
@@ -659,7 +670,15 @@ class TransformedDataTable extends TransformStatefulWidget {
   ///
   /// If null, [DataTableThemeData.dividerThickness] is used. This value
   /// defaults to 1.0.
+  ///
+  /// If set to 0.0, a hairline border will be shown.
+  /// To disable the divider, set [disableDivider] to true.
   final double? dividerThickness;
+
+  /// If set,disables the divider between two rows.
+  ///
+  /// See also: [dividerThickness]
+  final bool disableDivider;
 
   /// Whether a border at the bottom of the table is displayed.
   ///
@@ -1078,7 +1097,9 @@ class TransformedDataTableState
             ? Border(bottom: borderSide)
             : index == 0
                 ? null
-                : Border(top: borderSide);
+                : widget.disableDivider
+                    ? null
+                    : Border(top: borderSide);
         /*additionalHeadingRow = _buildTableRow(index, _headingRowKey, border,
             rowColor, defaultRowColor, states, tableColumns);*/
         return _buildTableRow(index, TransformedDataTable._headingRowKey,

@@ -37,3 +37,6 @@
 
 ## 0.0.13
  * It can now be configured if mouse panning should result in scroll
+
+## 0.0.14
+ * Now, the dividers that are displayed between the rows can be disabled.

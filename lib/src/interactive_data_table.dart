@@ -1324,7 +1324,6 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
       );
     }
 
-
     if (!widget.noMouseDragScroll) {
       child = GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -1362,7 +1361,7 @@ class _InteractiveDataTableState extends State<InteractiveDataTable>
           _onScaleUpdate(d, inner: true);
         },
         onDoubleTapDown:
-        widget.doubleTapToZoom ? ((d) => _doubleTapDetails = d) : null,
+            widget.doubleTapToZoom ? ((d) => _doubleTapDetails = d) : null,
         onDoubleTap: widget.doubleTapToZoom ? _handleDoubleTap : null,
         child: child,
       );
