@@ -279,11 +279,11 @@ abstract class BetterInteractiveViewerBase extends StatefulWidget {
   }
 
   @override
-  BetterInteractiveViewerState<BetterInteractiveViewerBase> createState();
+  BetterInteractiveViewerBaseState<BetterInteractiveViewerBase> createState();
 }
 
 /// The state for [BetterInteractiveViewerBase].
-abstract class BetterInteractiveViewerState<
+abstract class BetterInteractiveViewerBaseState<
         T extends BetterInteractiveViewerBase> extends State<T>
     with TickerProviderStateMixin {
   @protected
@@ -352,54 +352,101 @@ abstract class BetterInteractiveViewerState<
   }
 
   @protected
-  bool inNonCoveringZoom = false;
+  bool inNonCoveringZoomHorizontal = false;
+
+  @protected
+  bool inNonCoveringZoomVertical = false;
 
   ///Realign the transformation controllers value after a nonCoveringZoom (child is smaller than viewport) to make sure it can be displayed correctly
   @protected
-  void afterNonCoveringZoom() {
+  void afterZoom() {
     Matrix4 oldValue = transformationController!.value.clone();
     Vector3 oldTranslation = oldValue.getTranslation();
-    oldTranslation.x = 0;
-    oldValue.setTranslation(oldTranslation);
-    transformationController!.value = oldValue;
+    bool set = false;
+    if (inNonCoveringZoomHorizontal) {
+      oldTranslation.x = 0;
+      set = true;
+    }
+    if (inNonCoveringZoomVertical) {
+      oldTranslation.y = 0;
+      set = true;
+    }
+    if (set) {
+      oldValue.setTranslation(oldTranslation);
+      transformationController!.value = oldValue;
+    }
   }
-
-  ///How to align the child on non covering zoom
-  HorizontalNonCoveringZoomAlign get nonCoveringZoomAlignment;
 
   /// The actual transform you should use for rendering
   @protected
   Matrix4 get transformForRender {
-    if (!widget.allowNonCoveringScreenZoom || realChildSize == null) {
-      inNonCoveringZoom = false;
+    if (!widget.allowNonCoveringScreenZoom || childKey.currentContext == null) {
+      inNonCoveringZoomHorizontal = false;
+      inNonCoveringZoomVertical = false;
       return transformationController!.value;
     }
     Matrix4 transform = transformationController!.value;
     Rect boundaryRect = childBoundaryRect;
     Rect viewport = widgetViewport;
-    if (boundaryRect.width * transform.getScaleOnZAxis() < viewport.width) {
+    double scale = transform.getScaleOnZAxis();
+    inNonCoveringZoomHorizontal = boundaryRect.width * scale < viewport.width;
+    inNonCoveringZoomVertical = boundaryRect.height * scale < viewport.height;
+    if (inNonCoveringZoomHorizontal || inNonCoveringZoomVertical) {
       transform = transform.clone(); //dont change the transformation controller
-      double scale = transform.getScaleOnZAxis();
       transform.scale(1 / scale);
-      double translation;
-      switch (nonCoveringZoomAlignment) {
-        case HorizontalNonCoveringZoomAlign.left:
-          translation = 0;
-          break;
-        case HorizontalNonCoveringZoomAlign.middle:
-          translation = (viewport.width - (boundaryRect.width * scale)) / 2;
-          break;
-        case HorizontalNonCoveringZoomAlign.right:
-          translation = viewport.width - (boundaryRect.width * scale);
-          break;
+      Vector3 translation = Vector3.zero();
+      if (inNonCoveringZoomHorizontal) {
+        translation.x = getNonCoveringZoomHorizontalTranslation(scale);
+      }
+      if (inNonCoveringZoomVertical) {
+        translation.y = getNonCoveringZoomVerticalTranslation(scale);
       }
       transform.translate(translation);
       transform.scale(scale);
-      inNonCoveringZoom = true;
-    } else {
-      inNonCoveringZoom = false;
     }
     return transform;
+  }
+
+  ///How to align the child on non covering zoom for Horizontal axis
+  ///
+  /// Used by [getNonCoveringZoomHorizontalTranslation] to determine the
+  /// translation to apply when the child is smaller than the viewport
+  /// horizontally.
+  HorizontalNonCoveringZoomAlign get nonCoveringZoomAlignmentHorizontal;
+
+  ///How to align the child on non covering zoom for Vertical axis
+  ///
+  /// Used by [getNonCoveringZoomVerticalTranslation] to determine the
+  /// translation to apply when the child is smaller than the viewport
+  /// vertically.
+  VerticalNonCoveringZoomAlign get nonCoveringZoomAlignmentVertical;
+
+  /// Returns the translation to apply when the child is smaller than the viewport
+  /// vertically.
+  @protected
+  double getNonCoveringZoomVerticalTranslation(double scale) {
+    switch (nonCoveringZoomAlignmentVertical) {
+      case VerticalNonCoveringZoomAlign.top:
+        return 0;
+      case VerticalNonCoveringZoomAlign.middle:
+        return (widgetViewport.height - (childBoundaryRect.height * scale)) / 2;
+      case VerticalNonCoveringZoomAlign.bottom:
+        return widgetViewport.height - (childBoundaryRect.height * scale);
+    }
+  }
+
+  /// Returns the translation to apply when the child is smaller than the viewport
+  /// horizontally.
+  @protected
+  double getNonCoveringZoomHorizontalTranslation(double scale) {
+    switch (nonCoveringZoomAlignmentHorizontal) {
+      case HorizontalNonCoveringZoomAlign.left:
+        return 0;
+      case HorizontalNonCoveringZoomAlign.middle:
+        return (widgetViewport.width - (childBoundaryRect.width * scale)) / 2;
+      case HorizontalNonCoveringZoomAlign.right:
+        return widgetViewport.width - (childBoundaryRect.width * scale);
+    }
   }
 
   /// What should happen on transform change.
@@ -735,9 +782,7 @@ abstract class BetterInteractiveViewerState<
         if (round(referenceFocalPoint!) != round(focalPointSceneCheck)) {
           referenceFocalPoint = focalPointSceneCheck;
         }
-        if (inNonCoveringZoom) {
-          afterNonCoveringZoom();
-        }
+        afterZoom();
 
       case GestureType.rotate:
         if (details.rotation == 0.0) {
@@ -972,9 +1017,7 @@ abstract class BetterInteractiveViewerState<
       focalPointSceneScaled - focalPointScene,
     );
 
-    if (inNonCoveringZoom) {
-      afterNonCoveringZoom();
-    }
+    afterZoom();
     scrollbarController?.onScrollEnd();
   }
 
@@ -1300,6 +1343,13 @@ abstract class BetterInteractiveViewerState<
   /// If you decide to handle that yourself, there is no need to provide an actual implementation here.
   Widget buildChild(BuildContext context);
 
+  /// Gets called from the default [build] function with the result of [buildChild]
+  /// as the [child] parameter.
+  ///
+  /// This function is used to build the actual widget with the scrollbars and the transformation.
+  /// If your child applies the transform itself, you can just return the child.
+  Widget buildTransformAndScrollbars(BuildContext context, Widget child);
+
   ///Build the Widget.
   ///Instead of overriding this function, override [buildChild] so that all gesture detectors can be set up automatically.
   @override
@@ -1308,6 +1358,7 @@ abstract class BetterInteractiveViewerState<
         this.scrollbarController;
     scrollbarController?.updateScrollbarPainters();
     Widget child = buildChild(context);
+    child = buildTransformAndScrollbars(context, child);
 
     if (scrollbarController != null) {
       child = RawGestureDetector(
@@ -1405,6 +1456,12 @@ enum HorizontalNonCoveringZoomAlign {
   left,
   middle,
   right,
+}
+
+enum VerticalNonCoveringZoomAlign {
+  top,
+  middle,
+  bottom,
 }
 
 // A classification of relevant user gestures. Each contiguous user gesture is

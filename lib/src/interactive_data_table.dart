@@ -45,18 +45,23 @@ class InteractiveDataTable extends BetterInteractiveViewerBase {
   final TransformedDataTableBuilder transformedDataTableBuilder;
 
   @override
-  BetterInteractiveViewerState<InteractiveDataTable> createState() =>
+  BetterInteractiveViewerBaseState<InteractiveDataTable> createState() =>
       _InteractiveDataTableState();
 }
 
 class _InteractiveDataTableState
-    extends BetterInteractiveViewerState<InteractiveDataTable> {
+    extends BetterInteractiveViewerBaseState<InteractiveDataTable> {
   @override
   final GlobalKey<TransformedDataTableState> childKey = GlobalKey();
 
   @override
   void updateTransform() {
     childKey.currentState?.transform = transformForRender;
+  }
+
+  @override
+  Widget buildTransformAndScrollbars(BuildContext context, Widget child) {
+    return child;
   }
 
   @override
@@ -70,6 +75,10 @@ class _InteractiveDataTableState
   }
 
   @override
-  HorizontalNonCoveringZoomAlign get nonCoveringZoomAlignment =>
+  HorizontalNonCoveringZoomAlign get nonCoveringZoomAlignmentHorizontal =>
       HorizontalNonCoveringZoomAlign.middle;
+
+  @override
+  VerticalNonCoveringZoomAlign get nonCoveringZoomAlignmentVertical =>
+      VerticalNonCoveringZoomAlign.top;
 }
