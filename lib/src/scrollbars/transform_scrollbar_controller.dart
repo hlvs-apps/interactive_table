@@ -94,16 +94,24 @@ class TransformScrollbarController with ChangeNotifier {
     );
   }
 
-  void paint(PaintingContext context, Size viewport) {
+  void paint(PaintingContext context, Size viewport, {Offset? origin}) {
     Canvas canvas = context.canvas;
+    if (origin != null) {
+      canvas.save();
+      canvas.translate(origin.dx, origin.dy);
+    }
     verticalScrollbar.paint(canvas, viewport);
     horizontalScrollbar.paint(canvas, viewport);
+    if (origin != null) {
+      canvas.restore();
+    }
   }
 
   void updateAndPaint(
-      PaintingContext context, Matrix4 transform, Size viewport, Size content) {
+      PaintingContext context, Matrix4 transform, Size viewport, Size content,
+      {Offset? origin}) {
     update(transform, viewport, content);
-    paint(context, viewport);
+    paint(context, viewport, origin: origin);
   }
 }
 

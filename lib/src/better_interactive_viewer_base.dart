@@ -31,7 +31,6 @@ abstract class BetterInteractiveViewerBase extends StatefulWidget {
     this.scaleFactor = kDefaultMouseScrollToScaleFactor,
     this.transformationController,
     this.doubleTapToZoom = true,
-    this.zoomToWidth = true,
   })  : assert(minScale > 0),
         assert(interactionEndFrictionCoefficient > 0),
         assert(minScale.isFinite),
@@ -69,9 +68,6 @@ abstract class BetterInteractiveViewerBase extends StatefulWidget {
   ///
   ///   * [panEnabled], which is similar but for panning.
   final bool scaleEnabled;
-
-  /// Zooms the table to the width of the viewport, every time something with the table layout changes.
-  final bool zoomToWidth;
 
   /// Allows the user to zoom by double tapping.
   final bool doubleTapToZoom;
@@ -320,36 +316,9 @@ abstract class BetterInteractiveViewerBaseState<
   @protected
   RawTransformScrollbarController? scrollbarController;
 
+  /// Set this value if the child has a different size than returned by its render box
   @protected
   Size? realChildSize;
-
-  /// If the real child size differs from its bounding box, call this after you know its real size
-  void calculatedRealChildSize(Size size) {
-    realChildSize = size;
-    if (widget.allowNonCoveringScreenZoom) {
-      if (widget.zoomToWidth) {
-        Future.delayed(Duration.zero, () {
-          transformationController!.value = matrixScale(
-              transformationController!.value,
-              widgetViewport.width /
-                  (size.width *
-                      transformationController!.value.getScaleOnZAxis()));
-        });
-      } else {
-        Future.delayed(Duration.zero, updateTransform);
-      }
-    } else {
-      Future.delayed(Duration.zero, () {
-        transformationController!.value = matrixScale(
-            transformationController!.value,
-            widget.zoomToWidth
-                ? childBoundaryRect.width /
-                    (size.width *
-                        transformationController!.value.getScaleOnZAxis())
-                : 0.000001);
-      });
-    }
-  }
 
   @protected
   bool inNonCoveringZoomHorizontal = false;
@@ -377,6 +346,57 @@ abstract class BetterInteractiveViewerBaseState<
     }
   }
 
+  /// Cal this method after resize
+  @protected
+  void afterResize({bool forceUpdate = true}) {
+    Matrix4 transform = transformationController!.value;
+    Vector3 translation = transform.getTranslation();
+    Rect boundaryRect = childBoundaryRect;
+    Rect viewport = widgetViewport;
+
+    double scale = transform.getScaleOnZAxis();
+
+    double realWidth = boundaryRect.width * scale;
+    double realHeight = boundaryRect.height * scale;
+
+    double leftPositionX = translation.x;
+    double topPositionY = translation.y;
+    double rightPositionX = leftPositionX + realWidth;
+    double bottomPositionY = topPositionY + realHeight;
+
+    bool changed = false;
+    if (realWidth > viewport.width) {
+      if (leftPositionX < 0 && rightPositionX < viewport.width) {
+        translation.x = viewport.width - realWidth;
+        changed = true;
+      }
+    }
+
+    if (realWidth < viewport.width && translation.x != 0.0) {
+      translation.x = 0;
+      changed = true;
+    }
+
+    if (realHeight > viewport.height) {
+      if (topPositionY < 0 && bottomPositionY < viewport.height) {
+        translation.y = viewport.height - realHeight;
+        changed = true;
+      }
+    }
+
+    if (realHeight < viewport.height && translation.y != 0.0) {
+      translation.y = 0;
+      changed = true;
+    }
+
+    if (changed) {
+      transform = transform.clone()..setTranslation(translation);
+      transformationController!.value = transform;
+    } else if (forceUpdate) {
+      updateTransform();
+    }
+  }
+
   /// The actual transform you should use for rendering
   @protected
   Matrix4 get transformForRender {
@@ -394,14 +414,14 @@ abstract class BetterInteractiveViewerBaseState<
     if (inNonCoveringZoomHorizontal || inNonCoveringZoomVertical) {
       transform = transform.clone(); //dont change the transformation controller
       transform.scale(1 / scale);
-      Vector3 translation = Vector3.zero();
+      Vector3 translation = transform.getTranslation();
       if (inNonCoveringZoomHorizontal) {
         translation.x = getNonCoveringZoomHorizontalTranslation(scale);
       }
       if (inNonCoveringZoomVertical) {
         translation.y = getNonCoveringZoomVerticalTranslation(scale);
       }
-      transform.translate(translation);
+      transform.setTranslation(translation);
       transform.scale(scale);
     }
     return transform;
@@ -420,6 +440,26 @@ abstract class BetterInteractiveViewerBaseState<
   /// translation to apply when the child is smaller than the viewport
   /// vertically.
   VerticalNonCoveringZoomAlign get nonCoveringZoomAlignmentVertical;
+
+  /// How to zoom out when double tapping
+  ///
+  /// Used by [doubleTabZoomOutScale] to determine the scale to zoom out to when double tapping
+  DoubleTapZoomOutBehaviour get doubleTapZoomOutBehaviour;
+
+  /// To determine the scale to zoom out to when double tapping
+  @protected
+  double get doubleTabZoomOutScale {
+    switch (doubleTapZoomOutBehaviour) {
+      case DoubleTapZoomOutBehaviour.zoomOutToMatchHeight:
+        return widgetViewport.height / childBoundaryRect.height;
+      case DoubleTapZoomOutBehaviour.zoomOutToMatchWidth:
+        return widgetViewport.width / childBoundaryRect.width;
+      case DoubleTapZoomOutBehaviour.zoomOutToMinScale:
+        double widthScale = widgetViewport.width / childBoundaryRect.width;
+        double heightScale = widgetViewport.height / childBoundaryRect.height;
+        return math.min(widthScale, heightScale);
+    }
+  }
 
   /// Returns the translation to apply when the child is smaller than the viewport
   /// vertically.
@@ -744,7 +784,9 @@ abstract class BetterInteractiveViewerBaseState<
 
     switch (gestureType!) {
       case GestureType.scale:
-        assert(scaleStart != null);
+        if (scaleStart == null) {
+          return;
+        }
         scrollbarController?.onScrollStart();
         // details.scale gives us the amount to change the scale as of the
         // start of this gesture, so calculate the amount to scale as of the
@@ -798,7 +840,9 @@ abstract class BetterInteractiveViewerBaseState<
         currentRotation = desiredRotation;
 
       case GestureType.pan:
-        assert(referenceFocalPoint != null);
+        if (referenceFocalPoint == null) {
+          return;
+        }
         currentAxis ??= getPanAxis(referenceFocalPoint!, focalPointScene);
 
         if (widget.panAxis == PanAxis.horizontal) {
@@ -1032,7 +1076,7 @@ abstract class BetterInteractiveViewerBaseState<
     }
     final double currentScale =
         transformationController!.value.getScaleOnZAxis();
-    final double pos1Scale = widgetViewport.width / childBoundaryRect.width;
+    final double pos1Scale = doubleTabZoomOutScale;
     const double pos2Scale = 1;
     final position = doubleTapDetails!.localPosition;
 
@@ -1462,6 +1506,14 @@ enum VerticalNonCoveringZoomAlign {
   top,
   middle,
   bottom,
+}
+
+enum DoubleTapZoomOutBehaviour {
+  zoomOutToMatchWidth,
+  zoomOutToMatchHeight,
+
+  ///Zooms out the child to the minimum scale where it touches the viewport borders, but is completely visible
+  zoomOutToMinScale,
 }
 
 // A classification of relevant user gestures. Each contiguous user gesture is

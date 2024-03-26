@@ -62,4 +62,55 @@ class InteractiveDataTableExample extends StatelessWidget {
       ),
     );
   }
+
+ /* @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: Text(title),
+      ),
+      body: BetterInteractiveViewer(
+        maxScale: 4,
+        child: Container(
+          decoration: const BoxDecoration(boxShadow: [
+            BoxShadow(
+              offset: Offset(-20, 20),
+              color: Colors.red,
+              blurRadius: 15,
+              spreadRadius: -10,
+            ),
+            BoxShadow(
+              offset: Offset(-20, -20),
+              color: Colors.orange,
+              blurRadius: 15,
+              spreadRadius: -10,
+            ),
+            BoxShadow(
+              offset: Offset(20, -20),
+              color: Colors.blue,
+              blurRadius: 15,
+              spreadRadius: -10,
+            ),
+            BoxShadow(
+              offset: Offset(20, 20),
+              color: Colors.deepPurple,
+              blurRadius: 15,
+              spreadRadius: -10,
+            )
+          ]),
+          child: Container(
+            width: 200,
+            height: 200,
+            color: Colors.amber,
+            child: const Center(
+                child: Text(
+              'Text',
+              style: TextStyle(color: Colors.white, fontSize: 40),
+            )),
+          ),
+        ),
+      ),
+    );
+  }*/
 }

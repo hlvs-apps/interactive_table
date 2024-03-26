@@ -2,7 +2,8 @@ library interactive_table;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:interactive_table/src/scrollbars/scrollbar_painter.dart';
+
+import 'scrollbar_painter.dart';
 
 import 'transform_scrollbar_controller.dart';
 

@@ -1,8 +1,10 @@
 library interactive_table;
 
-import 'package:interactive_table/src/better_interactive_viewer_base.dart';
+import 'better_interactive_viewer_base.dart';
 
 import 'package:flutter/material.dart';
+import 'package:vector_math/vector_math_64.dart';
+import 'extensions.dart';
 
 import 'transformed_data_table.dart';
 
@@ -38,11 +40,14 @@ class InteractiveDataTable extends BetterInteractiveViewerBase {
     super.scaleFactor,
     super.transformationController,
     super.doubleTapToZoom,
-    super.zoomToWidth,
+    this.zoomToWidth = true,
   });
 
   /// The table configuration.
   final TransformedDataTableBuilder transformedDataTableBuilder;
+
+  /// Zooms the table to the width of the viewport, every time something with the table layout changes.
+  final bool zoomToWidth;
 
   @override
   BetterInteractiveViewerBaseState<InteractiveDataTable> createState() =>
@@ -64,6 +69,23 @@ class _InteractiveDataTableState
     return child;
   }
 
+  void calculatedRealChildSize(Size size) {
+    realChildSize = size;
+    if (widget.zoomToWidth) {
+      Future.microtask(() {
+        Matrix4 m = transformationController!.value.clone();
+        Vector3 translation = m.getTranslation();
+        m.setTranslation(Vector3.zero());
+        double scaleChange =
+            widgetViewport.width / (size.width * m.getScaleOnZAxis());
+        transformationController!.value = matrixTranslate(
+            matrixScale(m, scaleChange), Offset(translation.x, translation.y));
+      });
+    } else {
+      Future.microtask(afterResize);
+    }
+  }
+
   @override
   Widget buildChild(BuildContext context) {
     return widget.transformedDataTableBuilder.buildTable(
@@ -81,4 +103,8 @@ class _InteractiveDataTableState
   @override
   VerticalNonCoveringZoomAlign get nonCoveringZoomAlignmentVertical =>
       VerticalNonCoveringZoomAlign.top;
+
+  @override
+  DoubleTapZoomOutBehaviour get doubleTapZoomOutBehaviour =>
+      DoubleTapZoomOutBehaviour.zoomOutToMatchWidth;
 }
