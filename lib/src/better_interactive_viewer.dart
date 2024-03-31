@@ -1,15 +1,22 @@
 library interactive_table;
 
 import 'package:flutter/material.dart';
-import 'package:vector_math/vector_math_64.dart';
-import 'extensions.dart';
 import 'scrollbars/transform_and_scrollbars_widget.dart';
 import 'better_interactive_viewer_base.dart';
 
 class BetterInteractiveViewer extends BetterInteractiveViewerBase {
+  /// The child that gets transformed.
   final Widget child;
+
+  /// The horizontal alignment of the non-covering zoom.
+  /// Non covering zoom is the zoom that happens when the child is smaller than the viewport.
   final HorizontalNonCoveringZoomAlign nonCoveringZoomAlignmentHorizontal;
+
+  /// The vertical alignment of the non-covering zoom.
+  /// Non covering zoom is the zoom that happens when the child is smaller than the viewport.
   final VerticalNonCoveringZoomAlign nonCoveringZoomAlignmentVertical;
+
+  /// What should happen when the user double taps to zoom out.
   final DoubleTapZoomOutBehaviour doubleTapZoomOutBehaviour;
 
   BetterInteractiveViewer({

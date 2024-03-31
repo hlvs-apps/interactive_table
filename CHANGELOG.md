@@ -40,3 +40,7 @@
 
 ## 0.0.14
  * Now, the dividers that are displayed between the rows can be disabled.
+
+## 0.0.15
+ * Added BetterInteractiveViewer, a drop in replacement for InteractiveViewer that improves the Zoom and Pan experience, and adds scrollbars.
+ * Bugfix: When the viewport size decreased, the table would not update its size properly, or would not be shown at all.
