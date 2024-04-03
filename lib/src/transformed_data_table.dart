@@ -10,12 +10,12 @@ import 'dart:math' as math;
 
 import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
-import 'extensions.dart';
-import 'scrollbars/transform_scrollbar_controller.dart';
 import 'transform_table.dart';
 import 'transform_table_rendering.dart';
 import 'transform_table_stateful.dart';
 import 'transformed_table_builder.dart';
+
+import 'package:interactive_viewer_2/interactive_dev.dart';
 
 /// Configure the table in [SpreadsheetDataTable].
 class TransformedDataTableBuilder

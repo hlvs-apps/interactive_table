@@ -70,7 +70,7 @@ class InteractiveDataTableExample extends StatelessWidget {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(title),
       ),
-      body: BetterInteractiveViewer(
+      body: InteractiveViewer2(
         maxScale: 4,
         child: Container(
           decoration: const BoxDecoration(boxShadow: [

@@ -1,10 +1,10 @@
 library interactive_table;
 
-import 'better_interactive_viewer_base.dart';
 
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart';
-import 'extensions.dart';
+
+import 'package:interactive_viewer_2/interactive_dev.dart';
 
 import 'transformed_data_table.dart';
 

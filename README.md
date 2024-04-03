@@ -1,3 +1,7 @@
+# InteractiveTable
+
+[![Pub Version](https://img.shields.io/pub/v/interactive_table.svg)](https://pub.dev/packages/interactive_table)
+
 A DataTable like Table with built-in support for sticky headers, zoom and scroll designed to easily replace the Flutter DataTable.
 
 ## Features

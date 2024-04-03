@@ -81,7 +81,15 @@ packages:
       path: "../.."
       relative: true
     source: path
-    version: "0.0.14"
+    version: "0.0.16"
+  interactive_viewer_2:
+    dependency: transitive
+    description:
+      name: interactive_viewer_2
+      sha256: bc4ac7732a2c6bfeed6c2ad877d3497318149ce448f08e45f87bbe725342e837
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.1"
   leak_tracker:
     dependency: transitive
     description:

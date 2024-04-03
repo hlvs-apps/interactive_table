@@ -11,21 +11,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 
 import 'package:flutter/widgets.dart';
-import 'scrollbars/transform_scrollbar_controller.dart';
 
 import 'transform_table_rendering.dart';
 
-export 'package:flutter/rendering.dart'
-    show
-        FixedColumnWidth,
-        FlexColumnWidth,
-        FractionColumnWidth,
-        IntrinsicColumnWidth,
-        MaxColumnWidth,
-        MinColumnWidth,
-        TableBorder,
-        TableCellVerticalAlignment,
-        TableColumnWidth;
+import 'package:interactive_viewer_2/interactive_dev.dart';
+
 
 class _TableElementRow {
   const _TableElementRow({this.key, required this.children});

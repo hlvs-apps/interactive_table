@@ -1,9 +1,10 @@
 library interactive_table;
 
-import 'scrollbars/transform_scrollbar_controller.dart';
 import 'transformed_table_builder.dart';
 import 'transform_table_rendering.dart';
 import 'transform_table.dart';
+
+import 'package:interactive_viewer_2/interactive_dev.dart';
 
 import 'package:flutter/material.dart';
 
