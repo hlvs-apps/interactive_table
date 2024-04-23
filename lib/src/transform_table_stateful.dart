@@ -43,7 +43,7 @@ class TransformTableStateful extends TransformStatefulWidget {
   final bool hideRows;
 
   /// Configures how to paint the scrollbars.If null, no scrollbars will be painted.
-  final TransformScrollbarController? scrollbarController;
+  final ScrollbarControllerEncapsulation? scrollbarController;
 
   /// Called every time after performLayout(), with the calculated size of the table, without transforms and clips applied.
   /// Commonly used for Widgets manipulating this tables transform, e.g. for scrolling.

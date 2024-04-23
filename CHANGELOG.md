@@ -47,3 +47,6 @@
 
 ## 0.0.16
  * Moved the BetterInteractiveViewer to its own package, interactive_viewer_2
+
+## 0.0.17
+ * Updated Dependencies

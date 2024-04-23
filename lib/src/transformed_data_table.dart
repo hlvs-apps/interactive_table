@@ -293,7 +293,7 @@ class TransformedDataTableBuilder
       {Key? key,
       required Matrix4 transform,
       RenderTransformTableLayoutComplete? onLayoutComplete,
-      TransformScrollbarController? scrollbarController}) {
+        ScrollbarControllerEncapsulation? scrollbarController}) {
     return TransformedDataTable(
       key: key,
       initialTransform: transform,
@@ -704,7 +704,7 @@ class TransformedDataTable extends TransformStatefulWidget {
   final int? _onlyTextColumn;
 
   /// Configures how to paint the scrollbars.If null, no scrollbars will be painted.
-  final TransformScrollbarController? scrollbarController;
+  final ScrollbarControllerEncapsulation? scrollbarController;
 
   static int? _initOnlyTextColumn(List<DataColumn> columns) {
     int? result;
@@ -1315,7 +1315,6 @@ class TableRowInkWell extends InkResponse {
 
   @override
   RectCallback? getRectCallback(RenderBox referenceBox) {
-    //Dafür hab ich auch fünf Stunden gebraucht
     return () {
       RenderObject cell = referenceBox;
       RenderObject? table = cell.parent;
@@ -1330,7 +1329,7 @@ class TableRowInkWell extends InkResponse {
         final TableCellParentData cellParentData =
             cell.parentData! as TableCellParentData;
         assert(cellParentData.y != null);
-        final Rect rect = table.getRowBox(cellParentData.y!); //Auch hierfür
+        final Rect rect = table.getRowBox(cellParentData.y!);
         table.applyPaintTransform(cell, transform);
         Matrix4 onlyTableTransform = Matrix4.identity();
         table.applyPaintTransformForFirstChildInRow(

@@ -40,7 +40,7 @@ class RenderTransformTable extends RenderBox {
     TableColumnWidth defaultColumnWidth = const FlexColumnWidth(),
     required TextDirection textDirection,
     this.onLayoutComplete,
-    TransformScrollbarController? scrollbarController,
+    ScrollbarControllerEncapsulation? scrollbarController,
     TableBorder? border,
     List<Decoration?>? rowDecorations,
     ImageConfiguration configuration = ImageConfiguration.empty,
@@ -80,11 +80,11 @@ class RenderTransformTable extends RenderBox {
 
   /// Add a scrollbar controller to this table.
   /// This is used to control the scrollbars of the table.
-  TransformScrollbarController? get scrollbarController => _scrollbarController;
+  ScrollbarControllerEncapsulation? get scrollbarController => _scrollbarController;
 
-  TransformScrollbarController? _scrollbarController;
+  ScrollbarControllerEncapsulation? _scrollbarController;
 
-  set scrollbarController(TransformScrollbarController? value) {
+  set scrollbarController(ScrollbarControllerEncapsulation? value) {
     if (_scrollbarController == value) {
       return;
     }
