@@ -1,5 +1,3 @@
-library interactive_table;
-
 //Copied and modified from flutter/lib/src/material/data_table.dart
 
 // Copyright 2014 The Flutter Authors. All rights reserved.
@@ -17,7 +15,6 @@ import 'transformed_table_builder.dart';
 
 import 'package:interactive_viewer_2/interactive_dev.dart';
 
-/// Configure the table in [SpreadsheetDataTable].
 class TransformedDataTableBuilder
     extends TransformedTableBuilder<TransformedDataTable> {
   TransformedDataTableBuilder({
@@ -99,7 +96,7 @@ class TransformedDataTableBuilder
   /// The background color for the data rows.
   ///
   /// The effective background color can be made to depend on the
-  /// [MaterialState] state, i.e. if the row is selected, pressed, hovered,
+  /// [WidgetState] state, i.e. if the row is selected, pressed, hovered,
   /// focused, disabled or enabled. The color is painted as an overlay to the
   /// row. To make sure that the row's [InkWell] is visible (when pressed,
   /// hovered and focused), it is recommended to use a translucent background
@@ -131,7 +128,7 @@ class TransformedDataTableBuilder
   ///    match a component's state:
   ///    <https://material.io/design/interaction/states.html#anatomy>.
   /// {@endtemplate}
-  final MaterialStateProperty<Color?>? dataRowColor;
+  final WidgetStateProperty<Color?>? dataRowColor;
 
   /// {@template flutter.material.dataTable.dataRowMinHeight}
   /// The minimum height of each row (excluding the row that contains column headings).
@@ -163,7 +160,7 @@ class TransformedDataTableBuilder
   /// The background color for the heading row.
   ///
   /// The effective background color can be made to depend on the
-  /// [MaterialState] state, i.e. if the row is pressed, hovered, focused when
+  /// [WidgetState] state, i.e. if the row is pressed, hovered, focused when
   /// sorted. The color is painted as an overlay to the row. To make sure that
   /// the row's [InkWell] is visible (when pressed, hovered and focused), it is
   /// recommended to use a translucent color.
@@ -191,7 +188,7 @@ class TransformedDataTableBuilder
   ///    match a component's state:
   ///    <https://material.io/design/interaction/states.html#anatomy>.
   /// {@endtemplate}
-  final MaterialStateProperty<Color?>? headingRowColor;
+  final WidgetStateProperty<Color?>? headingRowColor;
 
   /// {@template flutter.material.dataTable.headingRowHeight}
   /// The height of the heading row.
@@ -511,7 +508,7 @@ class TransformedDataTable extends TransformStatefulWidget {
   /// The background color for the data rows.
   ///
   /// The effective background color can be made to depend on the
-  /// [MaterialState] state, i.e. if the row is selected, pressed, hovered,
+  /// [WidgetState] state, i.e. if the row is selected, pressed, hovered,
   /// focused, disabled or enabled. The color is painted as an overlay to the
   /// row. To make sure that the row's [InkWell] is visible (when pressed,
   /// hovered and focused), it is recommended to use a translucent background
@@ -543,7 +540,7 @@ class TransformedDataTable extends TransformStatefulWidget {
   ///    match a component's state:
   ///    <https://material.io/design/interaction/states.html#anatomy>.
   /// {@endtemplate}
-  final MaterialStateProperty<Color?>? dataRowColor;
+  final WidgetStateProperty<Color?>? dataRowColor;
 
   /// {@template flutter.material.dataTable.dataRowMinHeight}
   /// The minimum height of each row (excluding the row that contains column headings).
@@ -575,7 +572,7 @@ class TransformedDataTable extends TransformStatefulWidget {
   /// The background color for the heading row.
   ///
   /// The effective background color can be made to depend on the
-  /// [MaterialState] state, i.e. if the row is pressed, hovered, focused when
+  /// [WidgetState] state, i.e. if the row is pressed, hovered, focused when
   /// sorted. The color is painted as an overlay to the row. To make sure that
   /// the row's [InkWell] is visible (when pressed, hovered and focused), it is
   /// recommended to use a translucent color.
@@ -603,7 +600,7 @@ class TransformedDataTable extends TransformStatefulWidget {
   ///    match a component's state:
   ///    <https://material.io/design/interaction/states.html#anatomy>.
   /// {@endtemplate}
-  final MaterialStateProperty<Color?>? headingRowColor;
+  final WidgetStateProperty<Color?>? headingRowColor;
 
   /// {@template flutter.material.dataTable.headingRowHeight}
   /// The height of the heading row.
@@ -794,7 +791,7 @@ class TransformedDataTableState
     required bool? checked,
     required VoidCallback? onRowTap,
     required ValueChanged<bool?>? onCheckboxChanged,
-    required MaterialStateProperty<Color?>? overlayColor,
+    required WidgetStateProperty<Color?>? overlayColor,
     required bool tristate,
     MouseCursor? rowMouseCursor,
   }) {
@@ -849,7 +846,7 @@ class TransformedDataTableState
     required VoidCallback? onSort,
     required bool sorted,
     required bool ascending,
-    required MaterialStateProperty<Color?>? overlayColor,
+    required WidgetStateProperty<Color?>? overlayColor,
     required MouseCursor? mouseCursor,
   }) {
     final ThemeData themeData = Theme.of(context);
@@ -921,7 +918,7 @@ class TransformedDataTableState
     required GestureLongPressCallback? onLongPress,
     required GestureTapDownCallback? onTapDown,
     required GestureTapCancelCallback? onTapCancel,
-    required MaterialStateProperty<Color?>? overlayColor,
+    required WidgetStateProperty<Color?>? overlayColor,
     required GestureLongPressCallback? onRowLongPress,
     required MouseCursor? mouseCursor,
   }) {
@@ -997,8 +994,8 @@ class TransformedDataTableState
       LocalKey headingRowKey,
       BoxBorder? border,
       Color? rowColor,
-      MaterialStateProperty<Color?> defaultRowColor,
-      Set<MaterialState> states,
+      WidgetStateProperty<Color?> defaultRowColor,
+      Set<WidgetState> states,
       List<TableColumnWidth> tableColumns) {
     return TableRow(
       key: index == 0 ? headingRowKey : widget.rows[index - 1].key,
@@ -1014,18 +1011,18 @@ class TransformedDataTableState
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final DataTableThemeData dataTableTheme = DataTableTheme.of(context);
-    final MaterialStateProperty<Color?>? effectiveHeadingRowColor =
+    final WidgetStateProperty<Color?>? effectiveHeadingRowColor =
         widget.headingRowColor ??
             dataTableTheme.headingRowColor ??
             theme.dataTableTheme.headingRowColor;
-    final MaterialStateProperty<Color?>? effectiveDataRowColor =
+    final WidgetStateProperty<Color?>? effectiveDataRowColor =
         widget.dataRowColor ??
             dataTableTheme.dataRowColor ??
             theme.dataTableTheme.dataRowColor;
-    final MaterialStateProperty<Color?> defaultRowColor =
-        MaterialStateProperty.resolveWith(
-      (Set<MaterialState> states) {
-        if (states.contains(MaterialState.selected)) {
+    final WidgetStateProperty<Color?> defaultRowColor =
+        WidgetStateProperty.resolveWith(
+      (Set<WidgetState> states) {
+        if (states.contains(WidgetState.selected)) {
           return theme.colorScheme.primary.withOpacity(0.08);
         }
         return null;
@@ -1074,16 +1071,16 @@ class TransformedDataTableState
         final bool isDisabled = index > 0 &&
             anyRowSelectable &&
             widget.rows[index - 1].onSelectChanged == null;
-        final Set<MaterialState> states = <MaterialState>{
-          if (isSelected) MaterialState.selected,
-          if (isDisabled) MaterialState.disabled,
+        final Set<WidgetState> states = <WidgetState>{
+          if (isSelected) WidgetState.selected,
+          if (isDisabled) WidgetState.disabled,
         };
         final Color? resolvedDataRowColor = index > 0
             ? (widget.rows[index - 1].color ?? effectiveDataRowColor)
                 ?.resolve(states)
             : null;
         final Color? resolvedHeadingRowColor =
-            effectiveHeadingRowColor?.resolve(<MaterialState>{});
+            effectiveHeadingRowColor?.resolve(<WidgetState>{});
         final Color? rowColor =
             index > 0 ? resolvedDataRowColor : resolvedHeadingRowColor;
         final BorderSide borderSide = Divider.createBorderSide(
@@ -1126,8 +1123,8 @@ class TransformedDataTableState
       );
       rowIndex = 1;
       for (final DataRow row in widget.rows) {
-        final Set<MaterialState> states = <MaterialState>{
-          if (row.selected) MaterialState.selected,
+        final Set<WidgetState> states = <WidgetState>{
+          if (row.selected) WidgetState.selected,
         };
         tableRows[rowIndex].children[0] = _buildCheckbox(
           context: context,
@@ -1181,8 +1178,8 @@ class TransformedDataTableState
       } else {
         tableColumns[displayColumnIndex] = const IntrinsicColumnWidth();
       }
-      final Set<MaterialState> headerStates = <MaterialState>{
-        if (column.onSort == null) MaterialState.disabled,
+      final Set<WidgetState> headerStates = <WidgetState>{
+        if (column.onSort == null) WidgetState.disabled,
       };
       tableRows[0].children[displayColumnIndex] = _buildHeadingCell(
         context: context,
@@ -1204,8 +1201,8 @@ class TransformedDataTableState
       );
       rowIndex = 1;
       for (final DataRow row in widget.rows) {
-        final Set<MaterialState> states = <MaterialState>{
-          if (row.selected) MaterialState.selected,
+        final Set<WidgetState> states = <WidgetState>{
+          if (row.selected) WidgetState.selected,
         };
         final DataCell cell = row.cells[dataColumnIndex];
         tableRows[rowIndex].children[displayColumnIndex] = _buildDataCell(

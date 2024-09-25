@@ -1,5 +1,3 @@
-library interactive_table;
-
 import 'transformed_table_builder.dart';
 import 'transform_table_rendering.dart';
 import 'transform_table.dart';

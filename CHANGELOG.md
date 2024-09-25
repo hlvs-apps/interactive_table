@@ -50,3 +50,7 @@
 
 ## 0.0.17
  * Updated Dependencies
+
+## 0.0.18
+ * Updated Dependencies
+ * Moved from Material State to Widget State

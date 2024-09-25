@@ -1,5 +1,3 @@
-library interactive_table;
-
 import 'package:flutter/material.dart';
 
 import 'interactive_data_table.dart';
